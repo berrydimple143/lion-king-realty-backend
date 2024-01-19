@@ -179,7 +179,7 @@ class ClientController extends Controller
     {
         try
         {
-            $client = User::where('id', $request->rid)->first();
+            $client = User::with('contact')->where('id', $request->rid)->first();
         } catch (Exception $e)
         {
             $client = $e->getMessage();
@@ -192,28 +192,33 @@ class ClientController extends Controller
     public function update(Request $request)
     {
         try
-        {
-            $data = [
-                'name' => $request->name,
-                'email' => $request->email,
-                'username' => $request->username,
+        {            
+            $id = $request->id;           
+            $clientData = [
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middle_name' => $request->middle_name,
+                'extension_name' => $request->extension_name,
             ];
-            $id = $request->id;
-            $client = User::where('id', $id)->first();
-            $role_id = $client->roles->pluck('id')[0];
-            $removeRole = DB::table('model_has_roles')
-                ->where('model_id', $id)
-                ->where('role_id', $role_id)
-                ->delete();
-            $role = Role::where('id', $request->role_id)->first();
-            $client->assignRole($role);
-            $client = User::where('id', $id)->update($data);
+            $date_bought = Carbon::parse($request->date_bought)->format('Y-m-d H:i:s');
+            $contactData = [
+                'block' => $request->block,
+                'mobile' => $request->mobile,
+                'lot' => $request->lot,
+                'measure' => $request->measure,
+                'price' => $request->price,
+                'address' => $request->address,
+                'date_bought' => $date_bought,
+                'area_id' => $request->area_id,
+            ];
+            $client = User::where('id', $id)->update($clientData);
+            $contact = Contact::where('user_id', $id)->update($contactData);
         } catch (Exception $e)
         {
             $client = $e->getMessage();
         }
         return response()->json([
-            'user' => $client,
+            'client' => $client,
         ]);
     }
 
